@@ -335,5 +335,5 @@ while true; do
     fi
 
     # Sleep before the next status check
-    sleep 10
+    sleep 1
 done
