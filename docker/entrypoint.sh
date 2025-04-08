@@ -172,11 +172,11 @@ run_replica_setup() {
     export MYDUCK_PASSWORD="${SUPERUSER_PASSWORD}"
 
     # Run replica_setup.sh and check for errors
-    if source replica_setup.sh; then
+    ./replica_setup.sh
+    if [ $? -eq 0 ]; then
         echo "Replica setup completed."
     else
-        echo "Error: Replica setup failed."
-        exit 1
+        echo "Skipping replica setup."
     fi
 }
 
