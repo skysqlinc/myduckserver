@@ -29,6 +29,9 @@ get_core_count() {
 }
 
 CORE_COUNT=$(get_core_count)
+if [ $CORE_COUNT -eq 0 ]; then
+    CORE_COUNT=1
+fi
 THREAD_COUNT=$(( 2 * CORE_COUNT ))
 
 echo "Detected core count: $CORE_COUNT"
