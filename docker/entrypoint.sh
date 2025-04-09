@@ -39,15 +39,17 @@ parse_dsn() {
     fi
 
     # Extract credentials and host/port/dbname, stopping at any query parameters
-    if [[ "$dsn" =~ ^([^:@]+)(:([^@]*))?@([^:/]+)(:([0-9]+))?(/([^?]+))? ]]; then
+    if [[ "$dsn" =~ ^([^:@]+):(.+)@([^:/@]+)(:([0-9]+))?(/([^?]+))? ]]; then
         export SOURCE_USER="${BASH_REMATCH[1]}"
-        export SOURCE_PASSWORD="${BASH_REMATCH[3]}"
-        export SOURCE_HOST="${BASH_REMATCH[4]}"
-        export SOURCE_PORT="${BASH_REMATCH[6]}"
-        export SOURCE_DATABASE="${BASH_REMATCH[8]}"
+        export SOURCE_PASSWORD="${BASH_REMATCH[2]}"
+        export SOURCE_HOST="${BASH_REMATCH[3]}"
+        export SOURCE_PORT="${BASH_REMATCH[5]}"
+        export SOURCE_DATABASE="${BASH_REMATCH[7]}"
 
+        # URL-encode special characters in password
+        password_escaped=$(printf %s "$SOURCE_PASSWORD" | od -An -tx1 | tr ' ' % | xargs printf %s)
         # Remove the query parameters from SOURCE_DSN
-        export SOURCE_DSN="${dsn%%\?*}"
+        export SOURCE_DSN="${SOURCE_USER}:${password_escaped}@${SOURCE_HOST}:${SOURCE_PORT}/${SOURCE_DATABASE}"
     else
         echo "Error: Failed to parse DSN"
         exit 1
