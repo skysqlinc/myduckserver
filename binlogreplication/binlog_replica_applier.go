@@ -882,7 +882,7 @@ func (a *binlogReplicaApplier) executeQueryWithEngine(ctx *sql.Context, engine *
 	subctx := sql.NewContext(ctx, sql.WithSession(ctx.Session)).WithQuery(query.SQL)
 	subctx.SetCurrentDatabase(query.Database)
 	if subctx.GetCurrentDatabase() == "" {
-		ctx.GetLogger().WithField("query", query).Warn("No current database selected")
+		ctx.GetLogger().WithField("query", query).Debug("No current database selected")
 	}
 
 	// Analyze the query first to check if it's a DDL or DML statement,
