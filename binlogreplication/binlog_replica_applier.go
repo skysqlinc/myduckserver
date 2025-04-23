@@ -1290,6 +1290,8 @@ func (a *binlogReplicaApplier) flushDeltaBuffer(ctx *sql.Context, reason delta.F
 	if err = a.tableWriterProvider.FlushDeltaBuffer(ctx, conn, tx, reason); err != nil {
 		ctx.GetLogger().Errorf("Failed to flush changelog: %v", err.Error())
 		MyBinlogReplicaController.setSqlError(sqlerror.ERUnknownError, err.Error())
+		tx.Rollback()
+		adapter.CloseTxn(ctx)
 	}
 	return err
 }
