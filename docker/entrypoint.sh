@@ -304,6 +304,11 @@ setup() {
     # Ensure required directories exist
     mkdir -p "${DATA_PATH}" "${LOG_PATH}"
 
+    if [ "$RESET_DATABASE" = "1" ]; then
+        echo "Resetting database..."
+        rm -f ${DATA_PATH}/*.db ${DATA_PATH}/*.db.wal ${DATA_PATH}/*.bin .replica/*
+    fi
+
     case "$SETUP_MODE" in
         "" | "SERVER")
             echo "Starting MyDuck Server in SERVER mode..."
