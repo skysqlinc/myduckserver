@@ -748,20 +748,31 @@ func (a *binlogReplicaApplier) processBinlogEvent(ctx *sql.Context, engine *gms.
 		a.dirtyStream.Store(true)
 		a.inTxnStmtID.Add(1)
 
+	case event.IsHeartbeat():
+		// This event does not appear in the binary log. It's only sent over the
+		// network by a primary to a replica to let it know that the primary is still alive, and is only sent
+		// when the primary has no binlog events to send to replica servers.
+		// For more details, see: https://mariadb.com/kb/en/heartbeat_log_event/
+		// or https://dev.mysql.com/doc/dev/mysql-server/9.1.0/page_protocol_replication_binlog_event.html#sect_protocol_replication_event_heartbeat
+		ctx.GetLogger().Trace("Received binlog event: Heartbeat")
+
+	case event.IsStop():
+		// For more details, see: https://mariadb.com/kb/en/stop_event/ or
+		// https://dev.mysql.com/doc/dev/mysql-server/9.1.0/page_protocol_replication_binlog_event.html#sect_protocol_replication_event_stop
+		ctx.GetLogger().Trace("Received binlog event: Stop")
+
 	default:
 		// https://mariadb.com/kb/en/2-binlog-event-header/
 		bytes := event.Bytes()
 		switch bytes[4] {
-		case 0x1b:
-			// Type 27 is a Heartbeat event. This event does not appear in the binary log. It's only sent over the
-			// network by a primary to a replica to let it know that the primary is still alive, and is only sent
-			// when the primary has no binlog events to send to replica servers.
-			// For more details, see: https://mariadb.com/kb/en/heartbeat_log_event/
-			ctx.GetLogger().Trace("Received binlog event: Heartbeat")
-		case 0x03:
-			ctx.GetLogger().Trace("Received binlog event: Stop")
+		case 0xa1:
+			// https://mariadb.com/kb/en/binlog_checkpoint_event/
+			ctx.GetLogger().Trace("Received binlog event: Binlog Checkpoint")
+		case 0xa3:
+			// https://mariadb.com/kb/en/gtid_list_event/
+			ctx.GetLogger().Trace("Received binlog event: GTID List")
 		default:
-			return fmt.Errorf("received unknown event: %v", event)
+			return fmt.Errorf("received unknown event type: 0x%x", bytes[4])
 		}
 	}
 
@@ -871,7 +882,7 @@ func (a *binlogReplicaApplier) executeQueryWithEngine(ctx *sql.Context, engine *
 	subctx := sql.NewContext(ctx, sql.WithSession(ctx.Session)).WithQuery(query.SQL)
 	subctx.SetCurrentDatabase(query.Database)
 	if subctx.GetCurrentDatabase() == "" {
-		ctx.GetLogger().WithField("query", query).Warn("No current database selected")
+		ctx.GetLogger().WithField("query", query).Debug("No current database selected")
 	}
 
 	// Analyze the query first to check if it's a DDL or DML statement,
@@ -1279,6 +1290,8 @@ func (a *binlogReplicaApplier) flushDeltaBuffer(ctx *sql.Context, reason delta.F
 	if err = a.tableWriterProvider.FlushDeltaBuffer(ctx, conn, tx, reason); err != nil {
 		ctx.GetLogger().Errorf("Failed to flush changelog: %v", err.Error())
 		MyBinlogReplicaController.setSqlError(sqlerror.ERUnknownError, err.Error())
+		tx.Rollback()
+		adapter.CloseTxn(ctx)
 	}
 	return err
 }

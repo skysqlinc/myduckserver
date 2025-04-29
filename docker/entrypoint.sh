@@ -39,15 +39,17 @@ parse_dsn() {
     fi
 
     # Extract credentials and host/port/dbname, stopping at any query parameters
-    if [[ "$dsn" =~ ^([^:@]+)(:([^@]*))?@([^:/]+)(:([0-9]+))?(/([^?]+))? ]]; then
+    if [[ "$dsn" =~ ^([^:@]+):(.+)@([^:/@]+)(:([0-9]+))?(/([^?]+))? ]]; then
         export SOURCE_USER="${BASH_REMATCH[1]}"
-        export SOURCE_PASSWORD="${BASH_REMATCH[3]}"
-        export SOURCE_HOST="${BASH_REMATCH[4]}"
-        export SOURCE_PORT="${BASH_REMATCH[6]}"
-        export SOURCE_DATABASE="${BASH_REMATCH[8]}"
+        export SOURCE_PASSWORD="${BASH_REMATCH[2]}"
+        export SOURCE_HOST="${BASH_REMATCH[3]}"
+        export SOURCE_PORT="${BASH_REMATCH[5]}"
+        export SOURCE_DATABASE="${BASH_REMATCH[7]}"
 
+        # URL-encode special characters in password
+        password_escaped=$(printf %s "$SOURCE_PASSWORD" | od -An -tx1 | tr ' ' % | xargs printf %s)
         # Remove the query parameters from SOURCE_DSN
-        export SOURCE_DSN="${dsn%%\?*}"
+        export SOURCE_DSN="${SOURCE_USER}:${password_escaped}@${SOURCE_HOST}:${SOURCE_PORT}/${SOURCE_DATABASE}"
     else
         echo "Error: Failed to parse DSN"
         exit 1
@@ -172,11 +174,11 @@ run_replica_setup() {
     export MYDUCK_PASSWORD="${SUPERUSER_PASSWORD}"
 
     # Run replica_setup.sh and check for errors
-    if source replica_setup.sh; then
+    ./replica_setup.sh
+    if [ $? -eq 0 ]; then
         echo "Replica setup completed."
     else
-        echo "Error: Replica setup failed."
-        exit 1
+        echo "Skipping replica setup."
     fi
 }
 
@@ -302,6 +304,11 @@ setup() {
     # Ensure required directories exist
     mkdir -p "${DATA_PATH}" "${LOG_PATH}"
 
+    if [ "$RESET_DATABASE" = "1" ]; then
+        echo "Resetting database..."
+        rm -f ${DATA_PATH}/*.db ${DATA_PATH}/*.db.wal ${DATA_PATH}/*.bin .replica/*
+    fi
+
     case "$SETUP_MODE" in
         "" | "SERVER")
             echo "Starting MyDuck Server in SERVER mode..."
@@ -335,5 +342,5 @@ while true; do
     fi
 
     # Sleep before the next status check
-    sleep 10
+    sleep 1
 done

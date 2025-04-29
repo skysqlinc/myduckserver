@@ -1003,3 +1003,38 @@ func (t *Table) DropCheck(ctx *sql.Context, checkName string) error {
 		info.Checks = checks
 	})
 }
+
+// CreateIndexForForeignKey implements sql.ForeignKeyTable.
+func (t *Table) CreateIndexForForeignKey(ctx *sql.Context, indexDef sql.IndexDef) error {
+	return nil
+}
+
+// GetDeclaredForeignKeys implements sql.ForeignKeyTable.
+func (t *Table) GetDeclaredForeignKeys(ctx *sql.Context) ([]sql.ForeignKeyConstraint, error) {
+	return nil, nil
+}
+
+// GetReferencedForeignKeys implements sql.ForeignKeyTable.
+func (t *Table) GetReferencedForeignKeys(ctx *sql.Context) ([]sql.ForeignKeyConstraint, error) {
+	return nil, nil
+}
+
+// AddForeignKey implements sql.ForeignKeyTable.
+func (t *Table) AddForeignKey(ctx *sql.Context, fk sql.ForeignKeyConstraint) error {
+	return nil
+}
+
+// DropForeignKey implements sql.ForeignKeyTable.
+func (t *Table) DropForeignKey(ctx *sql.Context, fkName string) error {
+	return nil
+}
+
+// UpdateForeignKey implements sql.ForeignKeyTable.
+func (t *Table) UpdateForeignKey(ctx *sql.Context, fkName string, fk sql.ForeignKeyConstraint) error {
+	return nil
+}
+
+// GetForeignKeyEditor implements sql.ForeignKeyTable.
+func (t *Table) GetForeignKeyEditor(ctx *sql.Context) sql.ForeignKeyEditor {
+	return nil
+}

@@ -28,10 +28,13 @@ get_core_count() {
     fi
 }
 
-CORE_COUNT=$(get_core_count)
-THREAD_COUNT=$(( 2 * CORE_COUNT ))
+# Do not auto-detect the thread count based on cores, because the number usually is too high,
+# and when the server has low connection limit the copying fails.
+THREAD_COUNT=$INITIAL_COPY_THREAD_COUNT
+if [ -z "$THREAD_COUNT" ]; then
+    THREAD_COUNT=2
+fi
 
-echo "Detected core count: $CORE_COUNT"
 echo "Thread count set to: $THREAD_COUNT"
 
 # Prepare filter options

@@ -30,6 +30,7 @@ import (
 	"github.com/cockroachdb/apd/v3"
 	"github.com/dolthub/go-mysql-server/sql"
 	vtbinlog "vitess.io/vitess/go/mysql/binlog"
+	vtjson "vitess.io/vitess/go/mysql/json"
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/proto/vtrpc"
@@ -843,6 +844,23 @@ func CellValue(data []byte, pos int, typ byte, metadata uint16, column *sql.Colu
 			if err != nil {
 				panic(err)
 			}
+			var buf [64]byte
+			d := jsonVal.MarshalTo(buf[:0])
+			builder.(*array.StringBuilder).BinaryBuilder.Append(d)
+			return l + int(metadata), nil
+		}
+
+		// For MariDB JSON type, typ is Blob, but ftype is JSON.
+		// In this case, we get the JSON as a string not binary,
+		// and we need to parse it differently.
+		// TODO: We need to validate that this works with MySQL!
+		if ftype == querypb.Type_JSON {
+			p := vtjson.Parser{}
+			jsonVal, err := p.ParseBytes(data[pos : pos+l])
+			if err != nil {
+				panic(err)
+			}
+
 			var buf [64]byte
 			d := jsonVal.MarshalTo(buf[:0])
 			builder.(*array.StringBuilder).BinaryBuilder.Append(d)
