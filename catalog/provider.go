@@ -44,6 +44,7 @@ type DatabaseProviderConfig struct {
 	DataDir         string
 	DefaultDB       string
 	DefaultTimeZone string
+	MemoryLimit     string
 }
 
 func NewInMemoryDBProvider() *DatabaseProvider {
@@ -88,6 +89,9 @@ func NewDBProvider(config DatabaseProviderConfig) (prov *DatabaseProvider, err e
 		"LOAD icu",
 		"INSTALL postgres_scanner",
 		"LOAD postgres_scanner",
+	}
+	if config.MemoryLimit != "" {
+		bootQueries = append(bootQueries, fmt.Sprintf("SET memory_limit = '%s'", config.MemoryLimit))
 	}
 
 	for _, q := range bootQueries {

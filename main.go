@@ -72,6 +72,8 @@ var (
 
 	flightsqlHost = "localhost"
 	flightsqlPort = -1 // Disabled by default
+
+	duckDBMemoryLimit = ""
 )
 
 func init() {
@@ -101,6 +103,8 @@ func init() {
 
 	flag.StringVar(&flightsqlHost, "flightsql-host", flightsqlHost, "hostname for the Flight SQL service")
 	flag.IntVar(&flightsqlPort, "flightsql-port", flightsqlPort, "port number for the Flight SQL service")
+
+	flag.StringVar(&duckDBMemoryLimit, "duckdb-memory-limit", duckDBMemoryLimit, "The memory limit for DuckDB.")
 }
 
 func ensureSQLTranslate() {
@@ -133,6 +137,7 @@ func main() {
 		DefaultTimeZone: defaultTimeZone,
 		DataDir:         dataDirectory,
 		DefaultDB:       defaultDb,
+		MemoryLimit:     duckDBMemoryLimit,
 	})
 	if err != nil {
 		logrus.Fatalln("Failed to open the database:", err)

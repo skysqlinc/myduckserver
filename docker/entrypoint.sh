@@ -193,6 +193,7 @@ run_server_in_background() {
         ${RESTORE_ENDPOINT_OPTION} \
         ${RESTORE_ACCESS_KEY_ID_OPTION} \
         ${RESTORE_SECRET_ACCESS_KEY_OPTION} \
+        ${DUCKDB_MEMORY_LIMIT_OPTION} \
         | tee -a "${LOG_PATH}/server.log" 2>&1 &
       echo "$!" > "${PID_FILE}"
 }
@@ -299,6 +300,10 @@ setup() {
 
     if [ -n "$RESTORE_SECRET_ACCESS_KEY" ]; then
         export RESTORE_SECRET_ACCESS_KEY_OPTION="--restore-secret-access-key=$RESTORE_SECRET_ACCESS_KEY"
+    fi
+
+    if [ -n "$DUCKDB_MEMORY_LIMIT" ]; then
+        export DUCKDB_MEMORY_LIMIT_OPTION="--duckdb-memory-limit=$DUCKDB_MEMORY_LIMIT"
     fi
 
     # Ensure required directories exist
