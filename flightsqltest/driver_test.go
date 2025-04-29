@@ -92,7 +92,10 @@ func (s *SqlTestSuite) SetupSuite() {
 	}
 
 	s.createServer = func() (flight.Server, string, error) {
-		provider, err := catalog.NewDBProvider("", dataDirectory, defaultDb)
+		provider, err := catalog.NewDBProvider(catalog.DatabaseProviderConfig{
+			DataDir:   dataDirectory,
+			DefaultDB: defaultDb,
+		})
 		if err != nil {
 			return nil, "", err
 		}

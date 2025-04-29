@@ -2,18 +2,17 @@ package catalog
 
 import (
 	"context"
+	stdsql "database/sql"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	stdsql "database/sql"
-
 	"github.com/dolthub/go-mysql-server/sql"
 	"github.com/marcboeker/go-duckdb"
+	"github.com/sirupsen/logrus"
 
 	"github.com/apecloud/myduckserver/adapter"
 	"github.com/apecloud/myduckserver/configuration"
@@ -41,29 +40,37 @@ var _ configuration.DataDirProvider = (*DatabaseProvider)(nil)
 
 const readOnlySuffix = "?access_mode=read_only"
 
+type DatabaseProviderConfig struct {
+	DataDir         string
+	DefaultDB       string
+	DefaultTimeZone string
+}
+
 func NewInMemoryDBProvider() *DatabaseProvider {
-	prov, err := NewDBProvider("", ".", "")
+	prov, err := NewDBProvider(DatabaseProviderConfig{
+		DataDir: ".",
+	})
 	if err != nil {
 		panic(err)
 	}
 	return prov
 }
 
-func NewDBProvider(defaultTimeZone, dataDir, defaultDB string) (prov *DatabaseProvider, err error) {
+func NewDBProvider(config DatabaseProviderConfig) (prov *DatabaseProvider, err error) {
 	prov = &DatabaseProvider{
 		mu:                        &sync.RWMutex{},
-		defaultTimeZone:           defaultTimeZone,
+		defaultTimeZone:           config.DefaultTimeZone,
 		externalProcedureRegistry: sql.NewExternalStoredProcedureRegistry(), // This has no effect, just to satisfy the upper layer interface
-		dataDir:                   dataDir,
+		dataDir:                   config.DataDir,
 	}
 
-	if defaultDB == "" || defaultDB == "memory" {
+	if config.DefaultDB == "" || config.DefaultDB == "memory" {
 		prov.defaultCatalogName = "memory"
 		prov.dbFile = ""
 		prov.dsn = ""
 	} else {
-		prov.defaultCatalogName = defaultDB
-		prov.dbFile = defaultDB + ".db"
+		prov.defaultCatalogName = config.DefaultDB
+		prov.dbFile = config.DefaultDB + ".db"
 		prov.dsn = filepath.Join(prov.dataDir, prov.dbFile)
 	}
 

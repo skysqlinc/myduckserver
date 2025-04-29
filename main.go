@@ -25,6 +25,14 @@ import (
 
 	"github.com/apache/arrow-go/v18/arrow/flight"
 	"github.com/apache/arrow-go/v18/arrow/flight/flightsql"
+	sqle "github.com/dolthub/go-mysql-server"
+	"github.com/dolthub/go-mysql-server/memory"
+	"github.com/dolthub/go-mysql-server/server"
+	"github.com/dolthub/go-mysql-server/sql"
+	"github.com/dolthub/vitess/go/mysql"
+	_ "github.com/marcboeker/go-duckdb"
+	"github.com/sirupsen/logrus"
+
 	"github.com/apecloud/myduckserver/backend"
 	"github.com/apecloud/myduckserver/catalog"
 	"github.com/apecloud/myduckserver/flightsqlserver"
@@ -35,13 +43,6 @@ import (
 	"github.com/apecloud/myduckserver/plugin"
 	"github.com/apecloud/myduckserver/replica"
 	"github.com/apecloud/myduckserver/transpiler"
-	sqle "github.com/dolthub/go-mysql-server"
-	"github.com/dolthub/go-mysql-server/memory"
-	"github.com/dolthub/go-mysql-server/server"
-	"github.com/dolthub/go-mysql-server/sql"
-	"github.com/dolthub/vitess/go/mysql"
-	_ "github.com/marcboeker/go-duckdb"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -128,7 +129,11 @@ func main() {
 		return
 	}
 
-	provider, err := catalog.NewDBProvider(defaultTimeZone, dataDirectory, defaultDb)
+	provider, err := catalog.NewDBProvider(catalog.DatabaseProviderConfig{
+		DefaultTimeZone: defaultTimeZone,
+		DataDir:         dataDirectory,
+		DefaultDB:       defaultDb,
+	})
 	if err != nil {
 		logrus.Fatalln("Failed to open the database:", err)
 	}
