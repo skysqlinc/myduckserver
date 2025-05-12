@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"strconv"
 
@@ -54,6 +56,7 @@ var (
 	defaultDb     = "myduck"
 	dataDirectory = "."
 	logLevel      = int(logrus.InfoLevel)
+	profilerPort  = -1 // Disabled by default
 
 	replicaOptions replica.ReplicaOptions
 
@@ -62,7 +65,9 @@ var (
 	// Shared between the MySQL and Postgres servers.
 	superuserPassword = ""
 
-	defaultTimeZone = ""
+	// DuckDB options
+	defaultTimeZone   = ""
+	duckDBMemoryLimit = ""
 
 	// for Restore
 	restoreFile            = ""
@@ -72,8 +77,6 @@ var (
 
 	flightsqlHost = "localhost"
 	flightsqlPort = -1 // Disabled by default
-
-	duckDBMemoryLimit = ""
 )
 
 func init() {
@@ -85,6 +88,7 @@ func init() {
 	flag.StringVar(&dataDirectory, "datadir", dataDirectory, "The directory to store the database.")
 	flag.StringVar(&defaultDb, "default-db", defaultDb, "The default database name to use.")
 	flag.IntVar(&logLevel, "loglevel", logLevel, "The log level to use.")
+	flag.IntVar(&profilerPort, "profiler-port", profilerPort, "The port to bind to for the profiler.")
 
 	flag.StringVar(&superuserPassword, "superuser-password", superuserPassword, "The password for the superuser account.")
 
@@ -122,6 +126,10 @@ func main() {
 	}
 
 	logrus.SetLevel(logrus.Level(logLevel))
+
+	if profilerPort > 0 {
+		go startProfiler(profilerPort)
+	}
 
 	ensureSQLTranslate()
 
@@ -262,4 +270,16 @@ func executeRestoreIfNeeded() {
 	}
 
 	logrus.Infoln("Restore completed successfully:", msg)
+}
+
+func startProfiler(port int) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	// nolint:gosec // This port is not exposed. There is no need for more complex setup.
+	_ = http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 }
