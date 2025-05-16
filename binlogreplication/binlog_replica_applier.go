@@ -25,11 +25,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apecloud/myduckserver/adapter"
-	"github.com/apecloud/myduckserver/binlog"
-	"github.com/apecloud/myduckserver/charset"
-	"github.com/apecloud/myduckserver/delta"
-	"github.com/apecloud/myduckserver/mysqlutil"
 	gms "github.com/dolthub/go-mysql-server"
 	"github.com/dolthub/go-mysql-server/sql"
 	"github.com/dolthub/go-mysql-server/sql/binlogreplication"
@@ -43,6 +38,12 @@ import (
 	"vitess.io/vitess/go/mysql/sqlerror"
 	"vitess.io/vitess/go/sqltypes"
 	vquery "vitess.io/vitess/go/vt/proto/query"
+
+	"github.com/apecloud/myduckserver/adapter"
+	"github.com/apecloud/myduckserver/binlog"
+	"github.com/apecloud/myduckserver/charset"
+	"github.com/apecloud/myduckserver/delta"
+	"github.com/apecloud/myduckserver/mysqlutil"
 )
 
 // positionStore is a singleton instance for loading/saving binlog position state to disk for durable storage.
@@ -1199,11 +1200,12 @@ func (a *binlogReplicaApplier) appendRowFormatChanges(
 		txnGroup = []byte(gtid.File)
 		txnSeq = uint64(gtid.Pos)
 	case replication.MariadbGTID:
-		var domain, server [4]byte
-		binary.BigEndian.PutUint32(domain[:], gtid.Domain)
-		binary.BigEndian.PutUint32(server[:], gtid.Server)
-		txnTag = domain[:]
-		txnServer = server[:]
+		// If you change the following, make sure txnTag & txnServer are valid UTF-8 strings.
+		// Otherwise, we get the following error during the delta buffer flush:
+		//   "Failed to flush changelog: Invalid Input Error: Invalid unicode
+		//   (byte sequence mismatch) detected in segment statistics update"
+		txnTag = strconv.AppendUint(nil, uint64(gtid.Domain), 10)
+		txnServer = strconv.AppendUint(nil, uint64(gtid.Server), 10)
 		txnSeq = gtid.Sequence
 	}
 
