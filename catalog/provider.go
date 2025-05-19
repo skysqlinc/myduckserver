@@ -383,6 +383,9 @@ func (prov *DatabaseProvider) DropCatalog(name string, ifExists bool) error {
 }
 
 func (prov *DatabaseProvider) Close() error {
+	if _, err := prov.storage.ExecContext(context.Background(), "CHECKPOINT"); err != nil {
+		logrus.WithError(err).Errorln("Failed to run CHECKPOINT before closing the database")
+	}
 	defer prov.connector.Close()
 	return prov.storage.Close()
 }
