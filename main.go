@@ -23,7 +23,9 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/apache/arrow-go/v18/arrow/flight"
 	"github.com/apache/arrow-go/v18/arrow/flight/flightsql"
@@ -230,9 +232,17 @@ func main() {
 		go server.Serve()
 	}
 
-	if err = myServer.Start(); err != nil {
-		logrus.WithError(err).Fatalln("Failed to start MySQL-protocol server")
-	}
+	go func() {
+		// Start the MySQL-protocol server but don't check for errors,
+		// because it always returns nil.
+		_ = myServer.Start()
+	}()
+
+	// Wait for a termination signal.
+	osCh := make(chan os.Signal, 1)
+	signal.Notify(osCh, syscall.SIGINT, syscall.SIGTERM)
+	<-osCh
+	logrus.Info("Termination signal received")
 }
 
 func executeRestoreIfNeeded() {
