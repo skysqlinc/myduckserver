@@ -20,13 +20,14 @@ import (
 	"database/sql/driver"
 	"encoding/base64"
 	"fmt"
-	"github.com/apecloud/myduckserver/catalog"
 	"io"
 	"os"
 	"regexp"
 	"runtime/trace"
 	"sync"
 	"time"
+
+	"github.com/apecloud/myduckserver/catalog"
 
 	"github.com/apecloud/myduckserver/adapter"
 	"github.com/apecloud/myduckserver/backend"
@@ -168,10 +169,16 @@ func (h *DuckHandler) ComPrepareParsed(ctx context.Context, c *mysql.Conn, query
 		}
 		n := s.NumInput()
 		stmt = s.(*duckdb.Stmt)
-		stmtType = stmt.StatementType()
+		stmtType, err = stmt.StatementType()
+		if err != nil {
+			return err
+		}
 		paramTypes = make([]duckdb.Type, n)
 		for i := 0; i < n; i++ {
-			paramTypes[i] = stmt.ParamType(i + 1) // 1-based index
+			paramTypes[i], err = stmt.ParamType(i + 1) // 1-based index
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -190,16 +197,16 @@ func (h *DuckHandler) ComPrepareParsed(ctx context.Context, c *mysql.Conn, query
 		rows   *stdsql.Rows
 	)
 	switch stmtType {
-	case duckdb.DUCKDB_STATEMENT_TYPE_SELECT,
-		duckdb.DUCKDB_STATEMENT_TYPE_RELATION,
-		duckdb.DUCKDB_STATEMENT_TYPE_CALL,
-		duckdb.DUCKDB_STATEMENT_TYPE_PRAGMA,
-		duckdb.DUCKDB_STATEMENT_TYPE_EXPLAIN:
+	case duckdb.STATEMENT_TYPE_SELECT,
+		duckdb.STATEMENT_TYPE_RELATION,
+		duckdb.STATEMENT_TYPE_CALL,
+		duckdb.STATEMENT_TYPE_PRAGMA,
+		duckdb.STATEMENT_TYPE_EXPLAIN:
 
 		// Execute the query with all NULL values as parameters to get the result types.
 		query := query
-		if stmtType == duckdb.DUCKDB_STATEMENT_TYPE_SELECT ||
-			stmtType == duckdb.DUCKDB_STATEMENT_TYPE_RELATION {
+		if stmtType == duckdb.STATEMENT_TYPE_SELECT ||
+			stmtType == duckdb.STATEMENT_TYPE_RELATION {
 			// Add LIMIT 0 to avoid executing the actual query.
 			query = "SELECT * FROM (" + sql.RemoveSpaceAndDelimiter(query, ';') + ") LIMIT 0"
 		}
@@ -544,7 +551,7 @@ func (h *DuckHandler) executeBoundPlan(ctx *sql.Context, query string, _ tree.St
 	// }
 
 	var (
-		stmtType = stmt.StatementType()
+		stmtType duckdb.StmtType
 		schema   sql.Schema
 		iter     sql.RowIter
 		rows     *stdsql.Rows
@@ -552,12 +559,17 @@ func (h *DuckHandler) executeBoundPlan(ctx *sql.Context, query string, _ tree.St
 		err      error
 	)
 
+	stmtType, err = stmt.StatementType()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
 	switch stmtType {
-	case duckdb.DUCKDB_STATEMENT_TYPE_SELECT,
-		duckdb.DUCKDB_STATEMENT_TYPE_RELATION,
-		duckdb.DUCKDB_STATEMENT_TYPE_CALL,
-		duckdb.DUCKDB_STATEMENT_TYPE_PRAGMA,
-		duckdb.DUCKDB_STATEMENT_TYPE_EXPLAIN:
+	case duckdb.STATEMENT_TYPE_SELECT,
+		duckdb.STATEMENT_TYPE_RELATION,
+		duckdb.STATEMENT_TYPE_CALL,
+		duckdb.STATEMENT_TYPE_PRAGMA,
+		duckdb.STATEMENT_TYPE_EXPLAIN:
 		rows, err = adapter.QueryCatalog(ctx, query, vars...)
 		if err != nil {
 			break

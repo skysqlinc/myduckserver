@@ -42,7 +42,7 @@ require (
 replace (
 	github.com/dolthub/go-mysql-server v0.19.1-0.20241227200914-69b2934b5468 => github.com/apecloud/go-mysql-server v0.0.0-20241230161546-047d8079971d
 	github.com/dolthub/vitess v0.0.0-20241220202600-b18f18d0cde7 => github.com/apecloud/dolt-vitess v0.0.0-20241230164356-4a83fa43c02a
-	github.com/marcboeker/go-duckdb v1.8.3 => github.com/karsov/go-duckdb v0.0.0-20250512133031-bcd328c38b3c
+	github.com/marcboeker/go-duckdb v1.8.3 => /home/kalin/me/go-duckdb
 )
 
 require (
@@ -79,6 +79,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/getsentry/sentry-go v0.12.0 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gocraft/dbr/v2 v2.7.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -101,7 +102,6 @@ require (
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
@@ -127,7 +127,7 @@ require (
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
+	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sync v0.13.0 // indirect

@@ -2,11 +2,12 @@ package pgserver
 
 import (
 	"bytes"
-	"github.com/apecloud/myduckserver/catalog"
 	"regexp"
 	"strings"
 	"sync"
 	"unicode"
+
+	"github.com/apecloud/myduckserver/catalog"
 
 	"github.com/dolthub/go-mysql-server/sql"
 	"github.com/marcboeker/go-duckdb"
@@ -35,50 +36,55 @@ func IsWellKnownStatementTag(tag string) bool {
 }
 
 func GetStatementTag(stmt *duckdb.Stmt) string {
-	switch stmt.StatementType() {
-	case duckdb.DUCKDB_STATEMENT_TYPE_SELECT:
+	stmtType, err := stmt.StatementType()
+	if err != nil {
+		return "UNKNOWN"
+	}
+
+	switch stmtType {
+	case duckdb.STATEMENT_TYPE_SELECT:
 		return "SELECT"
-	case duckdb.DUCKDB_STATEMENT_TYPE_INSERT:
+	case duckdb.STATEMENT_TYPE_INSERT:
 		return "INSERT"
-	case duckdb.DUCKDB_STATEMENT_TYPE_UPDATE:
+	case duckdb.STATEMENT_TYPE_UPDATE:
 		return "UPDATE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_DELETE:
+	case duckdb.STATEMENT_TYPE_DELETE:
 		return "DELETE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_CALL:
+	case duckdb.STATEMENT_TYPE_CALL:
 		return "CALL"
-	case duckdb.DUCKDB_STATEMENT_TYPE_PRAGMA:
+	case duckdb.STATEMENT_TYPE_PRAGMA:
 		return "PRAGMA"
-	case duckdb.DUCKDB_STATEMENT_TYPE_COPY:
+	case duckdb.STATEMENT_TYPE_COPY:
 		return "COPY"
-	case duckdb.DUCKDB_STATEMENT_TYPE_ALTER:
+	case duckdb.STATEMENT_TYPE_ALTER:
 		return "ALTER"
-	case duckdb.DUCKDB_STATEMENT_TYPE_CREATE:
+	case duckdb.STATEMENT_TYPE_CREATE:
 		return "CREATE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_CREATE_FUNC:
+	case duckdb.STATEMENT_TYPE_CREATE_FUNC:
 		return "CREATE FUNCTION"
-	case duckdb.DUCKDB_STATEMENT_TYPE_DROP:
+	case duckdb.STATEMENT_TYPE_DROP:
 		return "DROP"
-	case duckdb.DUCKDB_STATEMENT_TYPE_PREPARE:
+	case duckdb.STATEMENT_TYPE_PREPARE:
 		return "PREPARE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_EXECUTE:
+	case duckdb.STATEMENT_TYPE_EXECUTE:
 		return "EXECUTE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_ATTACH:
+	case duckdb.STATEMENT_TYPE_ATTACH:
 		return "ATTACH"
-	case duckdb.DUCKDB_STATEMENT_TYPE_DETACH:
+	case duckdb.STATEMENT_TYPE_DETACH:
 		return "DETACH"
-	case duckdb.DUCKDB_STATEMENT_TYPE_TRANSACTION:
+	case duckdb.STATEMENT_TYPE_TRANSACTION:
 		return "TRANSACTION"
-	case duckdb.DUCKDB_STATEMENT_TYPE_ANALYZE:
+	case duckdb.STATEMENT_TYPE_ANALYZE:
 		return "ANALYZE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_EXPLAIN:
+	case duckdb.STATEMENT_TYPE_EXPLAIN:
 		return "EXPLAIN"
-	case duckdb.DUCKDB_STATEMENT_TYPE_SET:
+	case duckdb.STATEMENT_TYPE_SET:
 		return "SET"
-	case duckdb.DUCKDB_STATEMENT_TYPE_VARIABLE_SET:
+	case duckdb.STATEMENT_TYPE_VARIABLE_SET:
 		return "SET VARIABLE"
-	case duckdb.DUCKDB_STATEMENT_TYPE_EXPORT:
+	case duckdb.STATEMENT_TYPE_EXPORT:
 		return "EXPORT"
-	case duckdb.DUCKDB_STATEMENT_TYPE_LOAD:
+	case duckdb.STATEMENT_TYPE_LOAD:
 		return "LOAD"
 	default:
 		return "UNKNOWN"
