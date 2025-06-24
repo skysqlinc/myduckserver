@@ -53,8 +53,6 @@ github.com/apache/thrift v0.21.0 h1:tdPmh/ptjE1IJnhbhrcl2++TauVjy242rkV/UzJChnE=
 github.com/apache/thrift v0.21.0/go.mod h1:W1H8aR/QRtYNvrPeFXBtobyRkd0/YVhTc6i07XIAgDw=
 github.com/apecloud/dolt-vitess v0.0.0-20241230164356-4a83fa43c02a h1:SXBCXHJGSbHxq6k/WVAok2xAoEB2TK5ujTfyaYZKSwU=
 github.com/apecloud/dolt-vitess v0.0.0-20241230164356-4a83fa43c02a/go.mod h1:1gQZs/byeHLMSul3Lvl3MzioMtOW1je79QYGyi2fd70=
-github.com/apecloud/go-mysql-server v0.0.0-20241230161546-047d8079971d h1:VuNnD/7h5nLGo/aKdvUDmH367ZrdUdC/+SJDCN+Q3OY=
-github.com/apecloud/go-mysql-server v0.0.0-20241230161546-047d8079971d/go.mod h1:ToNOAVZAJ6iQBpigxYZo3q8JZDRxpI2/VRrtUoZeehI=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
@@ -389,6 +387,8 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88/go.mod h1:3w7q1U84EfirKl04SVQ/s7nPm1ZPhiXd34z40TNz36k=
 github.com/karsov/go-duckdb v0.0.0-20250512133031-bcd328c38b3c h1:r66Bdp4KTvSmwORv03fMPXA5udzTwgD9O9dHslJdTu0=
 github.com/karsov/go-duckdb v0.0.0-20250512133031-bcd328c38b3c/go.mod h1:d+okz0WazPy2uJ23y4WMkJihzqWm1/LpTfhGvSdO8hA=
+github.com/karsov/go-mysql-server v0.0.0-20250612151824-4a859b225532 h1:oLBDY+JLPfVcBT6ZF+VVT6Qx9ilOj+XXsDaVOWjPCX8=
+github.com/karsov/go-mysql-server v0.0.0-20250612151824-4a859b225532/go.mod h1:ToNOAVZAJ6iQBpigxYZo3q8JZDRxpI2/VRrtUoZeehI=
 github.com/kataras/golog v0.0.9/go.mod h1:12HJgwBIZFNGL0EJnMRhmvGA0PQGx8VFwrZtM4CqbAk=
 github.com/kataras/golog v0.0.10/go.mod h1:yJ8YKCmyL+nWjERB90Qwn+bdyBZsaQwU3bTVFgkFIp8=
 github.com/kataras/iris/v12 v12.0.1/go.mod h1:udK4vLQKkdDqMGJJVd/msuMtN6hpYJhg/lSzuxjhO+U=
