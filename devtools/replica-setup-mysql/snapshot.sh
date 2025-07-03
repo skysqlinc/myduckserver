@@ -65,12 +65,20 @@ output=$(mysqlsh --uri "$SOURCE_DSN" $SOURCE_PASSWORD_OPTION -- util copy-instan
     --load-indexes false \
     --defer-table-indexes all \
     ${FILTER_OPTIONS} \
+    2>&1 \
 )
 
 if [[ $GTID_MODE == "ON" ]]; then
     # Extract the EXECUTED_GTID_SET from this output:
     #   Executed_GTID_set: 369107a6-a0a5-11ef-a255-0242ac110008:1-10
     EXECUTED_GTID_SET=$(echo "$output" | grep -i "EXECUTED_GTID_SET" | awk '{print $2}')
+
+    # If there are no user schemas, the output contains "Filters for schemas result in an empty set."
+    # In this case, we don't have the EXECUTED_GTID_SET in the output.
+    # Set it to empty string, so that it can be populated later.
+    if echo "$output" | grep -q "Filters for schemas result in an empty set."; then
+        EXECUTED_GTID_SET="''"
+    fi
 
     # If the source is MariaDB, we will get `Executed_GTID_set: ''`.
     # In this case, we will use GTID_EXECUTED instead.
