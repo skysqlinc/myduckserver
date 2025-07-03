@@ -7,53 +7,39 @@ export POSTGRES_REPLICA_SETUP_PATH="${HOME}/replica-setup-postgres"
 export PID_FILE="${LOG_PATH}/myduck.pid"
 export INIT_SQLS_DIR="/docker-entrypoint-initdb.d"
 
-parse_dsn() {
-    # Check if SOURCE_DSN is set
-    if [ -z "$SOURCE_DSN" ]; then
-        echo "Error: SOURCE_DSN environment variable is not set"
+prepare_dsn() {
+    if [ -z "$SOURCE_HOST" ]; then
+        echo "Error: SOURCE_HOST environment variable is not set"
         exit 1
     fi
-
-    local dsn="$SOURCE_DSN"
-
-    # Initialize variables
-    SOURCE_TYPE=""
-    SOURCE_USER=""
-    SOURCE_PASSWORD=""
-    SOURCE_HOST=""
-    SOURCE_PORT=""
-    SOURCE_DATABASE=""
-
-    # Detect type
-    if [[ "$dsn" =~ ^postgres:// ]]; then
-        SOURCE_TYPE="POSTGRES"
-        # Strip the prefix
-        dsn="${dsn#postgres://}"
-    elif [[ "$dsn" =~ ^mysql:// ]]; then
+    if [ -z "$SOURCE_USER" ]; then
+        echo "Error: SOURCE_USER environment variable is not set"
+        exit 1
+    fi
+    if [ -z "$SOURCE_PASSWORD" ]; then
+        echo "Error: SOURCE_PASSWORD environment variable is not set"
+        exit 1
+    fi
+    if [ -z "$SOURCE_TYPE" ]; then
         SOURCE_TYPE="MYSQL"
-        # Strip the prefix
-        dsn="${dsn#mysql://}"
-    else
-        echo "Error: Unsupported DSN format: the URI scheme must be 'postgres' or 'mysql'"
+    fi
+    if [ "$SOURCE_TYPE" != "MYSQL" ] && [ "$SOURCE_TYPE" != "POSTGRES" ]; then
+        echo "Error: Unsupported SOURCE_TYPE value: ${SOURCE_TYPE}. Valid options are: MYSQL, POSTGRES."
         exit 1
     fi
-
-    # Extract credentials and host/port/dbname, stopping at any query parameters
-    if [[ "$dsn" =~ ^([^:@]+):(.+)@([^:/@]+)(:([0-9]+))?(/([^?]+))? ]]; then
-        export SOURCE_USER="${BASH_REMATCH[1]}"
-        export SOURCE_PASSWORD="${BASH_REMATCH[2]}"
-        export SOURCE_HOST="${BASH_REMATCH[3]}"
-        export SOURCE_PORT="${BASH_REMATCH[5]}"
-        export SOURCE_DATABASE="${BASH_REMATCH[7]}"
-
-        # URL-encode special characters in password
-        password_escaped=$(printf %s "$SOURCE_PASSWORD" | od -An -tx1 | tr ' ' % | xargs printf %s)
-        # Remove the query parameters from SOURCE_DSN
-        export SOURCE_DSN="${SOURCE_USER}:${password_escaped}@${SOURCE_HOST}:${SOURCE_PORT}/${SOURCE_DATABASE}"
-    else
-        echo "Error: Failed to parse DSN"
-        exit 1
+    # Set default ports if not specified
+    if [[ -z "$SOURCE_PORT" ]]; then
+        if [[ "$SOURCE_TYPE" == "POSTGRES" ]]; then
+            export SOURCE_PORT="5432"
+        elif [[ "$SOURCE_TYPE" == "MYSQL" ]]; then
+            export SOURCE_PORT="3306"
+        fi
     fi
+
+    # URL-encode special characters in password
+    password_escaped=$(printf %s "$SOURCE_PASSWORD" | od -An -tx1 | tr ' ' % | xargs printf %s)
+    # Remove the query parameters from SOURCE_DSN
+    export SOURCE_DSN="${SOURCE_USER}:${password_escaped}@${SOURCE_HOST}:${SOURCE_PORT}/${SOURCE_DATABASE}"
 
     # Handle empty SOURCE_DATABASE
     if [[ -z "$SOURCE_DATABASE" ]]; then
@@ -64,55 +50,11 @@ parse_dsn() {
         fi
     fi
 
-    # Set default ports if not specified
-    if [[ -z "$SOURCE_PORT" ]]; then
-        if [[ "$SOURCE_TYPE" == "POSTGRES" ]]; then
-            export SOURCE_PORT="5432"
-        elif [[ "$SOURCE_TYPE" == "MYSQL" ]]; then
-            export SOURCE_PORT="3306"
-        fi
-    fi
-
-    # Extract query parameters if present
-    if [[ "$dsn" =~ \?(.+)$ ]]; then
-        local query_string="${BASH_REMATCH[1]}"
-        # Initialize filter variables
-        local include_schemas=""
-        local exclude_schemas=""
-        local include_tables=""
-        local exclude_tables=""
-        
-        # Parse query parameters
-        IFS='&' read -ra PARAMS <<< "$query_string"
-        for param in "${PARAMS[@]}"; do
-            IFS='=' read -r key value <<< "$param"
-            case "$key" in
-                # Support both old and new parameter names
-                "schemas"|"include-schemas") include_schemas="$value" ;;
-                "exclude-schemas"|"skip-schemas") exclude_schemas="$value" ;;
-                "tables"|"include-tables") include_tables="$value" ;;
-                "exclude-tables"|"skip-tables") exclude_tables="$value" ;;
-            esac
-        done
-
-        # Handle include-schemas from both path and query parameter
-        if [[ -n "$SOURCE_DATABASE" && "$SOURCE_DATABASE" != "mysql" ]]; then
-            if [[ -n "$include_schemas" ]]; then
-                export INCLUDE_SCHEMAS="$SOURCE_DATABASE,$include_schemas"
-            else
-                export INCLUDE_SCHEMAS="$SOURCE_DATABASE"
-            fi
-        else
-            export INCLUDE_SCHEMAS="$include_schemas"
-        fi
-
-        export EXCLUDE_SCHEMAS="$exclude_schemas"
-        export INCLUDE_TABLES="$include_tables"
-        export EXCLUDE_TABLES="$exclude_tables"
-    else
-        # If no query parameters, but SOURCE_DATABASE is set
-        if [[ -n "$SOURCE_DATABASE" && "$SOURCE_DATABASE" != "mysql" ]]; then
+    if [[ "$SOURCE_DATABASE" != "mysql" ]]; then
+        if [[ -z "$INCLUDE_SCHEMAS" ]]; then
             export INCLUDE_SCHEMAS="$SOURCE_DATABASE"
+        else
+            export INCLUDE_SCHEMAS="$SOURCE_DATABASE,$INCLUDE_SCHEMAS"
         fi
     fi
 
@@ -122,6 +64,11 @@ parse_dsn() {
     echo "SOURCE_HOST=$SOURCE_HOST"
     echo "SOURCE_PORT=$SOURCE_PORT"
     echo "SOURCE_DATABASE=$SOURCE_DATABASE"
+    echo "INCLUDE_SCHEMAS=$INCLUDE_SCHEMAS"
+    echo "EXCLUDE_SCHEMAS=$EXCLUDE_SCHEMAS"
+    echo "INCLUDE_TABLES=$INCLUDE_TABLES"
+    echo "EXCLUDE_TABLES=$EXCLUDE_TABLES"
+    echo "SOURCE_DSN=$SOURCE_DSN"
 
     # Exit if host is localhost, 127.0.0.1, 0.0.0.0 or ::1
     if [[ "$SOURCE_HOST" =~ ^localhost$|^127\.0\.0\.1$|^0\.0\.0\.0$|^::1$ ]]; then
@@ -323,7 +270,7 @@ setup() {
             ;;
         "REPLICA")
             echo "Starting MyDuck Server in REPLICA mode..."
-            parse_dsn
+            prepare_dsn
             run_server_in_background
             wait_for_my_duck_server_ready
             execute_init_sqls
