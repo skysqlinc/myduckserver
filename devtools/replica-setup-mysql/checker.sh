@@ -8,6 +8,35 @@ check_command() {
     fi
 }
 
+# Function to check MySQL server connectivity
+check_mysql_connectivity() {
+    echo "Checking MySQL server connectivity..."
+
+    # Retry logic for connectivity check
+    local max_retries=3
+    local retry_count=0
+    local result=""
+
+    while [[ $retry_count -lt $max_retries ]]; do
+        result=$(mysqlsh --uri="$SOURCE_DSN" $SOURCE_PASSWORD_OPTION --sql -e "SELECT 1")
+
+        if [[ $? -eq 0 ]]; then
+            echo "Successfully connected to MySQL server."
+            return 0
+        fi
+
+        echo "Failed to connect to MySQL server. Retrying in 10 seconds..."
+        retry_count=$((retry_count + 1))
+        if [[ $retry_count -lt $max_retries ]]; then
+            sleep 10
+        fi
+    done
+
+    #  Handle the error
+    echo "Error: checking MySQL server connectivity failed."
+    exit 1
+}
+
 # Function to check MySQL server parameters
 check_server_params() {
     echo "Checking MySQL server parameters..."
@@ -96,6 +125,9 @@ check_user_privileges() {
 
 # Function to check MySQL configuration
 check_mysql_config() {
+    check_mysql_connectivity
+    check_command "MySQL server connectivity check"
+
     check_server_params
     check_command "MySQL server parameters check"
 
