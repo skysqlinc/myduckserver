@@ -94,21 +94,25 @@ fi
 echo "Checking if replication has already been started..."
 check_if_myduck_has_replica
 if [[ $? -ne 0 ]]; then
-    echo "Replication has already been started. Exiting."
-    exit 1
+    echo "Replication has already been started."
+    exit 0
 fi
 
 # Step 3: Check MySQL configuration
 echo "Checking MySQL configuration..."
 check_mysql_config
+if [[ $? -ne 0 ]]; then
+    echo "MySQL configuration check failed. Exiting."
+    exit 1
+fi
 check_command "MySQL configuration check"
 
-# Step 3: Prepare MyDuck Server for replication
+# Step 4: Prepare MyDuck Server for replication
 echo "Preparing MyDuck Server for replication..."
 source prepare.sh
 check_command "preparing MyDuck Server for replication"
 
-# Step 4: Copy the existing data from the source MySQL instance to MyDuck Server
+# Step 5: Copy the existing data from the source MySQL instance to MyDuck Server
 echo "Checking if source server supports MySQL Shell..."
 if check_if_source_supports_copying_instance; then
     echo "Copying a snapshot of the MySQL instance to MyDuck Server..."
@@ -118,7 +122,7 @@ else
     echo "The source server cannot be copied using MySQL Shell. The snapshot step has been skipped."
 fi
 
-# Step 5: Establish replication
+# Step 6: Establish replication
 echo "Starting replication..."
 source start_replication.sh
 check_command "starting replication"
