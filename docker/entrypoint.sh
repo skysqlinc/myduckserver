@@ -125,7 +125,8 @@ run_replica_setup() {
     if [ $? -eq 0 ]; then
         echo "Replica setup completed."
     else
-        echo "Skipping replica setup."
+        echo "Replica setup failed."
+        exit 1
     fi
 }
 
