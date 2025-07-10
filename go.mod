@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/Shopify/toxiproxy/v2 v2.9.0
 	github.com/apache/arrow-adbc/go/adbc v1.3.0
-	github.com/apache/arrow-go/v18 v18.3.1-0.20250509172628-ec15aba303a0
+	github.com/apache/arrow-go/v18 v18.3.1
 	github.com/aws/aws-sdk-go-v2 v1.30.4
 	github.com/aws/aws-sdk-go-v2/config v1.27.31
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.30
@@ -31,8 +31,8 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.24.0
-	google.golang.org/grpc v1.72.0
+	golang.org/x/text v0.25.0
+	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/src-d/go-errors.v1 v1.0.0
 	modernc.org/sqlite v1.33.1
@@ -42,7 +42,7 @@ require (
 replace (
 	github.com/dolthub/go-mysql-server v0.19.1-0.20241227200914-69b2934b5468 => github.com/karsov/go-mysql-server v0.0.0-20250612151824-4a859b225532
 	github.com/dolthub/vitess v0.0.0-20241220202600-b18f18d0cde7 => github.com/apecloud/dolt-vitess v0.0.0-20241230164356-4a83fa43c02a
-	github.com/marcboeker/go-duckdb v1.8.3 => github.com/karsov/go-duckdb v0.0.0-20250512133031-bcd328c38b3c
+	github.com/marcboeker/go-duckdb v1.8.3 => github.com/karsov/go-duckdb v0.0.0-20250708155340-e8b68d9ab0e5
 )
 
 require (
@@ -126,13 +126,13 @@ require (
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
+	golang.org/x/tools v0.33.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
