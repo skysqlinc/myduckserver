@@ -53,8 +53,12 @@ if [ -n "$EXCLUDE_TABLES" ]; then
 fi
 
 echo "Copying data from MySQL to MyDuck..."
+
+myduck_password_escaped=$(printf %s "$MYDUCK_PASSWORD" | od -An -tx1 | tr ' ' % | xargs printf %s)
+export MYDUCK_DSN="mysql://${MYDUCK_USER}:${myduck_password_escaped}@${MYDUCK_HOST}:${MYDUCK_PORT}"
+
 # Run mysqlsh command and capture the output
-output=$(mysqlsh --uri "$SOURCE_DSN" $SOURCE_PASSWORD_OPTION -- util copy-instance "mysql://${MYDUCK_USER}:${MYDUCK_PASSWORD}@${MYDUCK_HOST}:${MYDUCK_PORT}" \
+output=$(mysqlsh --uri "$SOURCE_DSN" $SOURCE_PASSWORD_OPTION -- util copy-instance "$MYDUCK_DSN" \
     --users false \
     --consistent false \
     --ignore-existing-objects true \
