@@ -61,6 +61,7 @@ export MYDUCK_DSN="mysql://${MYDUCK_USER}:${myduck_password_escaped}@${MYDUCK_HO
 output=$(mysqlsh --uri "$SOURCE_DSN" $SOURCE_PASSWORD_OPTION -- util copy-instance "$MYDUCK_DSN" \
     --users false \
     --consistent false \
+    --events false \
     --ignore-existing-objects true \
     --handle-grant-errors ignore \
     --threads $THREAD_COUNT \
