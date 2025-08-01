@@ -48,7 +48,8 @@ RUN --mount=type=bind,target=. \
       CC="aarch64-linux-gnu-gcc" CXX="aarch64-linux-gnu-g++" CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /myduckserver; \
     else \
       CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /myduckserver; \
-    fi
+    fi && \
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /myducktools cmd/myducktools/main.go
 
 # Step 2: Final stage
 FROM debian:bookworm-slim
@@ -93,6 +94,7 @@ WORKDIR /home/admin
 
 # Copy application files
 COPY --from=builder /myduckserver /usr/local/bin/myduckserver
+COPY --from=builder /myducktools /usr/local/bin/myducktools
 COPY --chown=admin:admin --chmod=755 docker/*.sh .
 COPY --chown=admin:admin --chmod=755 devtools/replica-setup-mysql ./replica-setup-mysql
 COPY --chown=admin:admin --chmod=755 devtools/replica-setup-postgres ./replica-setup-postgres

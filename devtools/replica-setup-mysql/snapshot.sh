@@ -28,6 +28,14 @@ get_core_count() {
     fi
 }
 
+# Function to copy the users from the source to the target
+copy_users() {
+    SOURCE_GO_DSN="${SOURCE_USER}:${SOURCE_PASSWORD}@tcp(${SOURCE_HOST}:${SOURCE_PORT})/"
+    TARGET_GO_DSN="${MYDUCK_USER}:${MYDUCK_PASSWORD}@tcp(${MYDUCK_HOST}:${MYDUCK_PORT})/"
+
+    myducktools copy-users "$SOURCE_GO_DSN" "$TARGET_GO_DSN"
+}
+
 # Do not auto-detect the thread count based on cores, because the number usually is too high,
 # and when the server has low connection limit the copying fails.
 THREAD_COUNT=$INITIAL_COPY_THREAD_COUNT
@@ -72,6 +80,11 @@ output=$(mysqlsh --uri "$SOURCE_DSN" $SOURCE_PASSWORD_OPTION -- util copy-instan
     ${FILTER_OPTIONS} \
     2>&1 \
 )
+
+# LOG_LEVEL is 5 print the output
+if [[ $LOG_LEVEL -ge 5 ]]; then
+    echo "$output"
+fi
 
 if [[ $GTID_MODE == "ON" ]]; then
     # Extract the EXECUTED_GTID_SET from this output:
@@ -118,6 +131,13 @@ else
     echo "BINLOG_POS: $BINLOG_POS"
 fi
 
+echo "Copying users..."
+copy_users
+if [[ $? -ne 0 ]]; then
+    echo "Error: Failed to copy users, exiting."
+    exit 1
+fi
+echo "Users copied successfully."
 
 echo "Snapshot completed successfully."
 
