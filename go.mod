@@ -6,6 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/Shopify/toxiproxy/v2 v2.9.0
+	github.com/alecthomas/kong v1.12.1
 	github.com/apache/arrow-adbc/go/adbc v1.3.0
 	github.com/apache/arrow-go/v18 v18.3.1
 	github.com/aws/aws-sdk-go-v2 v1.30.4
